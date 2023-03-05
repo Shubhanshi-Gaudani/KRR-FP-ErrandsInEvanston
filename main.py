@@ -1,18 +1,45 @@
+#PROCESSING THE KB INTO OUR OWN DATATYPE
+import json
+import random
+f = open('evanston_data.json')
+data = json.load(f)
+i = 0
+#Declare the Place data type and the database
+class Place:
+  def __init__(self, name, amenity, latlong):
+    self.name = name
+    self.amenity = amenity
+    self.latlong = latlong
+  def __str__(self):
+    return ' '.join([self.name, self.amenity, " ".join(str(x) for x in self.latlong)])
+list_of_places = []
+type_amenities = []
+amenity_sorted = {}
+#Decode the master JSON datatype and convert it into our own data-type
+for item in data["features"]:
+    place_temp = Place(item["properties"]["name"], item["properties"]["amenity"], item["geometry"]["coordinates"])
+    list_of_places.append(Place)
+
+    if place_temp.amenity not in list(amenity_sorted.keys()):
+        amenity_sorted[item["properties"]["amenity"]] = [Place(item["properties"]["name"], item["properties"]["amenity"], item["geometry"]["coordinates"])]
+    else:
+        #print(amenity_sorted[item["properties"]["amenity"]])
+        amenity_sorted[item["properties"]["amenity"]].append(Place(item["properties"]["name"], item["properties"]["amenity"], item["geometry"]["coordinates"]) )
+
+
+
+#CREATING THE FRONTEND
 import tkinter as tk
 window = tk.Tk()
-
 #making all the GUI components
 title = tk.Label(text="🎼 Evanston Task Planner 🚗", width=20, height=3, font=("Arial", 20))
 title.pack()
-
 #description of functionality
 desc = tk.Label(text="This program helps you minimize distance as you perform your tasks and go around Evanston.", width=100, height=2, font=("Arial", 10))
 desc.pack()
-
 #amenity classes
 classes = tk.Label(text="Here are the kinds of places you can go to: ['school', 'place_of_worship', 'library', 'fuel', 'restaurant', 'pharmacy', 'fast_food', 'cinema', 'pub', 'cafe', 'car_rental', 'bank', 'dentist', 'spa', 'bar', 'post_office', 'parking', 'atm', 'brewery', 'animal_shelter', 'doctors', 'clinic', 'money_transfer', 'theatre', 'music_school', 'police', 'ice_cream', 'kindergarten', 'dance_theater', 'salon', 'social_facility', 'veterinary', 'parking_entrance', 'nursing_home', 'bicycle_rental', 'charging_station', 'arts_centre']", width=100, wraplength=700, height=5, font=("Arial", 10))
 classes.pack()
-
 #entering categories
 category_entry_label = tk.Label(text="Please enter up to five types of places you would like to go to from the list above, separated by semicolons.", height = 2, font=("Helvetica", 10))
 categories = tk.Entry(width=100)
@@ -31,13 +58,12 @@ result_label = tk.Label(text="Results:", font=("Helvetica", 10), height=2)
 result = tk.Text(width=100)
 result_label.pack()
 result.pack()
-
 #entry.get() pulls from input box, entry.insert() pushes text to it
 #event
 def handle_click(event):
     print('worked')
     location_input = location.get()
-    categories_input = categories.get() 
+    categories_input = categories.get()
     try:
         #call whatever function does the calculation from the KB!!!
         #need to parse category input into a list of categories. we've asked for input to be separated by semicolons.
@@ -49,5 +75,4 @@ def handle_click(event):
         result.insert('1.0','There seems to be an error in your input. Please check that the formatting is appropriate.')
 
 submit_button.bind("<Button-1>", handle_click)
-
 window.mainloop()
