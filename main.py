@@ -1,6 +1,8 @@
 #PROCESSING THE KB INTO OUR OWN DATATYPE
 import json
 import random
+import haversine as hs
+
 f = open('evanston_data.json')
 data = json.load(f)
 i = 0
@@ -26,6 +28,38 @@ for item in data["features"]:
         #print(amenity_sorted[item["properties"]["amenity"]])
         amenity_sorted[item["properties"]["amenity"]].append(Place(item["properties"]["name"], item["properties"]["amenity"], item["geometry"]["coordinates"]) )
 
+#DEFINING FUNCTIONS
+#Function 1: return a random place from that collection for a particular amenity: 
+def rand_amenity(amenity): 
+    return random.choice(amenity_sorted[amenity])
+
+def get_list_of_places(am_list):
+    places_to_go = []
+    for am in am_list:
+        places_to_go.append(rand_amenity(am))
+    return places_to_go
+
+def calculate_distance(latlong_one, latlongtwo):
+    coord_1 = (latlong_one[0], latlong_one[1])
+    coord_2 = (latlongtwo[0], latlongtwo[1])
+    x = hs.haversine(coord_1, coord_2)
+    return x
+
+
+def optimizer(places_to_go, current_location):
+    order = [Place("Current Location", "temp", [current_location[0], current_location[1]])]
+    while len(places_to_go) != 0:
+        min_dist = 9999999999
+        for place in places_to_go:
+            curr_dist = calculate_distance(order[-1].latlong, place.latlong)
+            if curr_dist < min_dist: 
+                min_dist = curr_dist
+                min_place = place
+        order.append(min_place)
+       #places_to_go.pop(min_place)
+        places_to_go = [item for item in places_to_go if item != min_place]
+
+    return order
 
 
 #CREATING THE FRONTEND
@@ -58,19 +92,36 @@ result_label = tk.Label(text="Results:", font=("Helvetica", 10), height=2)
 result = tk.Text(width=100)
 result_label.pack()
 result.pack()
-#entry.get() pulls from input box, entry.insert() pushes text to it
-#event
+
+
+#HANDLING ACTUAL INPUT
+
+#from geopy import Nominatim
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic as GD
+
+locator = Nominatim(user_agent="myGeocoder")
+
 def handle_click(event):
-    print('worked')
-    location_input = location.get()
-    categories_input = categories.get()
+    result.delete("1.0", tk.END) #clearing the box
     try:
-        #call whatever function does the calculation from the KB!!!
-        #need to parse category input into a list of categories. we've asked for input to be separated by semicolons.
+        #getting current location
+        location_input = location.get()
+        foo = locator.geocode(location_input + ' Evanston, IL 60201')
+        current_location = [foo.latitude, foo.longitude]
+        categories_input = categories.get()
+        #getting inputted categories
         categories_input = categories_input.split(';')
-        print(categories_input)
-        output = 'trying to insert\na new line' #this will be the output of the function
-        result.insert('1.0',output)
+
+        #doing the calculations
+        places_to_go = get_list_of_places(categories_input)
+        result_list = optimizer(places_to_go, current_location)
+        output_string = 'The best order (that minimizes distance travelled) for you to accomplish these tasks in is: \n\n'
+        for item in result_list[1:]:
+            output_string += item.name
+            output_string += '\n'
+
+        result.insert('1.0',output_string)
     except:
         result.insert('1.0','There seems to be an error in your input. Please check that the formatting is appropriate.')
 
