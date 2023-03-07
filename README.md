@@ -5,14 +5,14 @@ Make sure all necessary libraries are installed using ```pip install``` and then
 
 You can run the following commands using pipenv to manage the dependencies:
 
-'''
+```
 pipenv install haversine
 pipenv install tk
 pipenv install geopy
-'''
+```
 
 Finally run with 
-'''pipenv run python3 main.py'''
+```pipenv run python3 main.py```
 
 ## Using the Interface
 1) write up to five places from the selection above(make sure to separate them with commas instead of spaces).
